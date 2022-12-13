@@ -24,17 +24,20 @@ class PositionalEncoding(torch.nn.Module):
         return self.dropout(x)
 
 class MyTransformerEncoder(torch.nn.Module):
-    def __init__(self, d_model, output_dimension, num_layers=6, nhead=8):
+    def __init__(self, d_model, output_dimension, num_layers=6, nhead=4):
         '''我自定义的Transformer Encoder。
         ---
         d_model是embedding token的大小，在这里就是我们已有的glove。大小是50或100。
         
         output_dimension是最后的全连接层输出的大小，这里应该是1，因为我们想输出一个二分类结果。
         '''
+        super(MyTransformerEncoder, self).__init__()
         self.positional_embedding = PositionalEncoding(d_model)
         layer = torch.nn.TransformerEncoderLayer(d_model, nhead=nhead)
         self.transformer = torch.nn.TransformerEncoder(layer, num_layers)
         self.linear = torch.nn.Linear(d_model, output_dimension)
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.to(self.device)
     
     def foward(self, x: torch.Tensor):
         '''通过网络。
