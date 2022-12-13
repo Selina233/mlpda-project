@@ -9,7 +9,8 @@ __pycache__/
 # Dataset
 data/
 npys/
-npys
+
+
 # Distribution / packaging
 .Python
 build/
