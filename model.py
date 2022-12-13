@@ -39,7 +39,7 @@ class MyTransformerEncoder(torch.nn.Module):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.to(self.device)
     
-    def foward(self, x: torch.Tensor):
+    def forward(self, x: torch.Tensor):
         '''通过网络。
         ---
         具体而言：
