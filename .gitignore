@@ -9,7 +9,7 @@ __pycache__/
 # Dataset
 data/
 npys/
-
+trained_models/
 
 # Distribution / packaging
 .Python
