@@ -1,5 +1,46 @@
-import torch
 import math
+
+import torch
+
+
+class LSTM(torch.nn.Module):
+    def __init__(self, hidden_size):
+        super(LSTM, self).__init__()
+        self.lstm = torch.nn.LSTM(input_size=100, hidden_size=hidden_size, num_layers=1,
+                            batch_first=True)
+        self.fc = torch.nn.Sequential(torch.nn.Dropout(0.5),
+                                      torch.nn.Linear(hidden_size, 32),
+                                      torch.nn.Linear(32, 1),
+                                      torch.nn.Sigmoid())
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.to(self.device)
+
+    def forward(self, input_seq):
+        # print(x.size())
+        x, _ = self.lstm(input_seq)
+        x = self.fc(x)
+        x = x[:, -1, :]
+        return x
+
+class MyLSTM(torch.nn.Module):
+    def __init__(self, d_model, output_dimension):
+        super(MyLSTM, self).__init__()
+        self.lstm = torch.nn.LSTM(input_size=d_model, hidden_size=256, num_layers=1)
+        self.decoder = torch.nn.Linear(256, output_dimension)
+        self.sigmoid = torch.nn.Sigmoid()
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.to(self.device)
+        
+    def forward(self, x):
+        x = x.transpose(0, 1) # [len, batch, d_model]
+        h0 = torch.zeros([1, x.shape[1], 256]).to(self.device)
+        c0 = torch.zeros([1, x.shape[1], 256]).to(self.device)
+        x, (h, c) = self.lstm(x, (h0, c0))
+        x = self.decoder(x[-1])
+        x = self.sigmoid(x)
+        return x
+
+
 
 class PositionalEncoding(torch.nn.Module):
     def __init__(self, d_model, dropout=0.1, max_len=5000):
@@ -34,8 +75,10 @@ class MyTransformerEncoder(torch.nn.Module):
         super(MyTransformerEncoder, self).__init__()
         self.positional_embedding = PositionalEncoding(d_model)
         layer = torch.nn.TransformerEncoderLayer(d_model, nhead=nhead)
-        self.transformer = torch.nn.TransformerEncoder(layer, num_layers)
+        norm = torch.nn.LayerNorm(d_model)
+        self.transformer = torch.nn.TransformerEncoder(layer, num_layers, norm)
         self.linear = torch.nn.Linear(d_model, output_dimension)
+        self.sigmoid = torch.nn.Sigmoid()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.to(self.device)
     
@@ -51,7 +94,9 @@ class MyTransformerEncoder(torch.nn.Module):
         最后通过一个线性层，输出一个二分类结果。
         '''
         x = self.positional_embedding(x)
-        x = self.transformer(x)
-        x = self.linear(x)
+        x = self.transformer(x) # [batch, len, d_model]
+        x = x.transpose(0, 1) # [len, batch, d_model]
+        x = self.linear(x[-1])
+        x = self.sigmoid(x)
         return x
 
