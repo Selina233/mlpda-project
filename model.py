@@ -65,7 +65,7 @@ class PositionalEncoding(torch.nn.Module):
         return self.dropout(x)
 
 class MyTransformerEncoder(torch.nn.Module):
-    def __init__(self, d_model, output_dimension, num_layers=6, nhead=4):
+    def __init__(self, d_model, output_dimension, num_layers=3, nhead=4):
         '''我自定义的Transformer Encoder。
         ---
         d_model是embedding token的大小，在这里就是我们已有的glove。大小是50或100。
@@ -93,9 +93,9 @@ class MyTransformerEncoder(torch.nn.Module):
         
         最后通过一个线性层，输出一个二分类结果。
         '''
-        x = self.positional_embedding(x)
-        x = self.transformer(x) # [batch, len, d_model]
         x = x.transpose(0, 1) # [len, batch, d_model]
+        x = self.positional_embedding(x)
+        x = self.transformer(x)
         x = self.linear(x[-1])
         x = self.sigmoid(x)
         return x
