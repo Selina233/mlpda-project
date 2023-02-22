@@ -1,5 +1,5 @@
-import torch
 import numpy as np
+import torch
 
 
 class MyDataset(torch.utils.data.Dataset):
@@ -12,8 +12,9 @@ class MyDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         sentence = self.X[index]
         sentence = [self.vocabulary_vectors[word_id] if word_id>=0 else np.zeros(100) for word_id in sentence]
+        sentence = np.asarray(sentence)
         sentence = torch.as_tensor(sentence, dtype=torch.float32, device=self.device)
-        label = torch.as_tensor(self.y[index], dtype=torch.float32, device=self.device)
+        label = torch.as_tensor([self.y[index]], dtype=torch.float32, device=self.device)
         return sentence, label
     
     def __len__(self):
